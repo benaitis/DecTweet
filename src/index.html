@@ -1,0 +1,508 @@
+<html>
+  <head>
+    <title>Decentralised Twitter</title>
+    <div>
+      <button type="button" onclick="UpdateInfo()">Update Info</button>
+    </div>
+    <script type="text/javascript" src="js/web3.js"></script>
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/skeleton.css">
+  </head>
+</html>
+<script>
+        //Web3 init
+        var web3Provider = null;
+        if (typeof web3 !== 'undefined') {//Web3 init
+          web3provider = web3.currentProvider;
+          console.log("Web3 version: " + web3.version.api)
+        } else {
+          // If no injected web3 instance is detected, fall back to Ganache
+          web3Provider = new Web3.providers.HttpProvider('http://localhost:8545');
+        }
+        //var web3 = new Web3(web3Provider); //this one didnt work.
+        web3.setProvider(web3provider); //this fixed the problem
+
+
+        //Contract init
+          var contractAddress = '0x0b23c6bFe9F04D57DD5c0f85a8f0961D418b3a22';
+                  var contractABI = [
+                  	{
+                  		"anonymous": false,
+                  		"inputs": [
+                  			{
+                  				"indexed": true,
+                  				"name": "authour",
+                  				"type": "address"
+                  			},
+                  			{
+                  				"indexed": false,
+                  				"name": "message",
+                  				"type": "string"
+                  			},
+                  			{
+                  				"indexed": false,
+                  				"name": "index",
+                  				"type": "uint256"
+                  			}
+                  		],
+                  		"name": "addTweet",
+                  		"type": "event"
+                  	},
+                  	{
+                  		"constant": false,
+                  		"inputs": [
+                  			{
+                  				"name": "message",
+                  				"type": "string"
+                  			}
+                  		],
+                  		"name": "NewTweet",
+                  		"outputs": [
+                  			{
+                  				"name": "index",
+                  				"type": "uint256"
+                  			}
+                  		],
+                  		"payable": false,
+                  		"stateMutability": "nonpayable",
+                  		"type": "function"
+                  	},
+                  	{
+                  		"constant": false,
+                  		"inputs": [
+                  			{
+                  				"name": "_username",
+                  				"type": "string"
+                  			}
+                  		],
+                  		"name": "register",
+                  		"outputs": [
+                  			{
+                  				"name": "result",
+                  				"type": "bool"
+                  			}
+                  		],
+                  		"payable": false,
+                  		"stateMutability": "nonpayable",
+                  		"type": "function"
+                  	},
+                  	{
+                  		"constant": true,
+                  		"inputs": [],
+                  		"name": "getAllTweetCount",
+                  		"outputs": [
+                  			{
+                  				"name": "count",
+                  				"type": "uint256"
+                  			}
+                  		],
+                  		"payable": false,
+                  		"stateMutability": "view",
+                  		"type": "function"
+                  	},
+                  	{
+                  		"constant": true,
+                  		"inputs": [
+                  			{
+                  				"name": "id",
+                  				"type": "uint256"
+                  			}
+                  		],
+                  		"name": "getTweet",
+                  		"outputs": [
+                  			{
+                  				"name": "text",
+                  				"type": "string"
+                  			},
+                  			{
+                  				"name": "user",
+                  				"type": "address"
+                  			}
+                  		],
+                  		"payable": false,
+                  		"stateMutability": "view",
+                  		"type": "function"
+                  	},
+                  	{
+                  		"constant": true,
+                  		"inputs": [
+                  			{
+                  				"name": "_address",
+                  				"type": "address"
+                  			}
+                  		],
+                  		"name": "getUsername",
+                  		"outputs": [
+                  			{
+                  				"name": "",
+                  				"type": "string"
+                  			}
+                  		],
+                  		"payable": false,
+                  		"stateMutability": "view",
+                  		"type": "function"
+                  	},
+                  	{
+                  		"constant": true,
+                  		"inputs": [
+                  			{
+                  				"name": "_user",
+                  				"type": "address"
+                  			}
+                  		],
+                  		"name": "getUserTweetsCount",
+                  		"outputs": [
+                  			{
+                  				"name": "count",
+                  				"type": "uint256"
+                  			}
+                  		],
+                  		"payable": false,
+                  		"stateMutability": "view",
+                  		"type": "function"
+                  	},
+                  	{
+                  		"constant": true,
+                  		"inputs": [
+                  			{
+                  				"name": "_address",
+                  				"type": "address"
+                  			}
+                  		],
+                  		"name": "isRegistered",
+                  		"outputs": [
+                  			{
+                  				"name": "result",
+                  				"type": "bool"
+                  			}
+                  		],
+                  		"payable": false,
+                  		"stateMutability": "view",
+                  		"type": "function"
+                  	},
+                  	{
+                  		"constant": true,
+                  		"inputs": [
+                  			{
+                  				"name": "",
+                  				"type": "uint256"
+                  			}
+                  		],
+                  		"name": "tweets",
+                  		"outputs": [
+                  			{
+                  				"name": "text",
+                  				"type": "string"
+                  			},
+                  			{
+                  				"name": "user",
+                  				"type": "address"
+                  			}
+                  		],
+                  		"payable": false,
+                  		"stateMutability": "view",
+                  		"type": "function"
+                  	}
+                  ];
+          var myContract = web3.eth.contract(contractABI).at(contractAddress);
+
+          /*document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function(){
+             UpdateNetwork();
+
+             getAllTweetCount();
+             getUserTweetsCount();
+             getLoggedInUsername();
+            }, 3000);
+
+          }, false);*/
+
+          var addTweetEvent = myContract.addTweet({fromBlock: 3527720, toBlock: 'latest'});
+            addTweetEvent.watch(function(error, response) {
+                 if (!error) {
+                   console.log(response)
+                console.log('Author ' + response.args.authour + ' Message: '+ response.args.message);
+                var div = document.createElement("div");
+                div.className = 'container';
+                document.body.appendChild(div);
+                div.innerHTML ='<div class="row">' + '<div class="six columns">' + '<p class="post">' + response.args.message + '</p>' + '</div>' + '<div class="six columns">' + '<span class="'+ response.args.authour +'">' + response.args.authour + '</span>'+ '</div>' + '</div>' + '</div>';
+
+                console.log(response.args.index.c["0"])
+                updateTweetUsername(response.args.index.c["0"])
+                getUserTweetsCount();
+                updateTweetCount();
+                 } else {
+                      console.error(error);
+                 }
+            });
+
+            function isRegistered (_address) {
+              return new Promise (function (resolve, reject) {
+                myContract.isRegistered(_address, function(error, result){
+                  if(!error){
+                    resolve(result);
+                  }
+                  else {
+                    reject(error);
+                  }
+                });
+              })
+            }
+            //async function getValue(account) {
+            //    var result = await isRegistered(account);
+            //    console.log(result);
+            //}
+
+        var transactionSent;
+        var el = function(id){ return document.querySelector(id); };
+
+    function UpdateInfo()
+    {
+        UpdateNetwork();
+        getAllTweetCount();
+        getUserTweetsCount();
+        getLoggedInUsername();
+    }
+
+
+      function GetAccountAddress()
+      {
+      		return web3.eth.accounts[0];
+          /*web3.eth.getAccounts(function(error, accounts) {
+              return accounts[0];
+          });*/
+
+      }
+
+      function GetNetwork()
+      {
+        var network = web3.version.network;
+        switch (network)
+          	{
+              case "1":
+                return '1 Ethereum mainnet';
+                break
+              case "3":
+                return '3 Ethereum  Ropsten Test network.';
+                break
+              case "4":
+                  return '4 Ethereum Rinkeby Test network.';
+                break
+              case "42":
+                return '42 Ethereum Kovan Test network.';
+                break
+          		case "5777":
+          			return '5777 Local Ethereum Ganache.';
+          			break
+              default:
+                return 'Ethereum  unknown network.';
+          			break;
+            }
+      }
+
+      function UpdateNetwork()
+      {
+        el('#YourNetwork').innerHTML = GetNetwork();
+      }
+
+      async function register()
+      {
+        var activeAccount = GetAccountAddress();
+
+        var result = await isRegistered(activeAccount);
+        if(result){
+          console.log('Already Registered')
+        }
+        else{
+          console.log('Registering account: ', activeAccount);
+          //Register account
+          myContract.register('Benas', {from: activeAccount, gas: 1000000}, function(error, result){
+            if(error){
+              console.log('Error registering account ' + error);
+            }
+            else {
+              console.log('Succesful register ' + result)
+            }
+          })
+        }
+        /*myContract.isRegistered.call(activeAccount, function(error, result){
+          if(!error){
+            if(result){
+              console.log('Already Registered')
+            }
+            else{
+              console.log('Registering account: ', activeAccount);
+              //Register account
+              myContract.register('Benas', {from: activeAccount, gas: 1000000}, function(error, result){
+                if(error){
+                  console.log('Error registering account ' + error);
+                }
+                else {
+                  console.log('Succesful register ' + result)
+                }
+              })
+            }
+          }
+          else {
+            console.log('Error getting account registration ' + error);
+          }
+        })*/
+
+      }
+
+      function getAllTweetCount()
+      {
+        var activeAccount = GetAccountAddress();
+        //console.log("Getting all tweets in network, requested by: ", activeAccount);
+
+        myContract.getAllTweetCount({from:activeAccount}, function(error,result) {
+          if(!error){
+            //console.log("Tweets in network: " + result.toNumber());
+            el('#TotalTweetsinNetwork').innerHTML = result.toNumber();
+            for (index = 0; index < result.toNumber(); ++index) {
+              (async () => {
+                   await getTweet(index);
+              })();
+                updateTweetUsername(index);
+            }
+          }
+          else{
+            console.log(error);
+          }
+        });
+      }
+
+      function updateTweetCount()
+      {
+        var activeAccount = GetAccountAddress();
+
+        myContract.getAllTweetCount({from:activeAccount}, function(error,result) {
+          if(!error){
+            el('#TotalTweetsinNetwork').innerHTML = result.toNumber();
+
+          }
+          else{
+            console.log(error);
+          }
+        });
+      }
+
+      function getLoggedInUsername()
+      {
+        var activeAccount = GetAccountAddress();
+        //console.log('Getting username, requested by: ', activeAccount);
+
+        myContract.getUsername(activeAccount, function(error, result) {
+          if(!error){
+            //console.log('Username of ' + activeAccount + ' is :' + result );
+            el('#CurrentUser').innerHTML = result;
+          }
+          else{
+            console.log(error);
+          }
+        });
+      }
+
+      function getUserTweetsCount()
+      {
+        var activeAccount = GetAccountAddress();
+        myContract.getUserTweetsCount(activeAccount, function(error,result) {
+          if(!error){
+            //console.log('Your tweets: ' + result.toNumber());
+              el('#CurrentUserTweets').innerHTML = result.toNumber();
+          }
+          else{
+            console.log('Error getting user tweets count ' + error)
+          }
+        });
+      }
+
+      function getTweet(id)
+      {
+        myContract.getTweet(id, function(error,result) {
+          if(error){
+            console.log('Error ' + error)
+          }
+          else{
+            //console.log('Tweet: ' + result["0"] + ' by: ' + result["1"])
+            var div = document.createElement("div");
+            div.className = 'container';
+            div.innerHTML ='<div class="row">' + '<div class="six columns">' + '<p class="post">' + result["0"] + '</p>' + '</div>' + '<div class="six columns">' + '<span class="'+ result["1"]+'">'
+            + result["1"] + '</span>'+ '</div>' + '</div>' + '</div>';
+            document.body.appendChild(div);
+          }
+        })
+      }
+
+      function updateTweetUsername(index)
+      {
+        myContract.getTweet(index, function(error,result){
+          if(!error){
+            var span = document.getElementsByClassName(result["1"])
+            //console.log(span)
+            myContract.getUsername(result["1"], function(err, res) {
+              if(!err){
+                console.log(index + ' ' + span[index] + ' ' + res + ' ' + result)
+                span[index].innerHTML = res;
+              }
+              else{
+                console.log(err);
+              }
+            })
+          }
+          else {
+            console.log(error)
+          }
+        })
+      }
+
+      function NewTweet(message)
+      {
+        var activeAccount = GetAccountAddress();
+
+        myContract.isRegistered.call(activeAccount, function(error, result){
+          if(!error){
+            if(result){
+              myContract.NewTweet(message,{from:activeAccount}, function(error,result){
+                if(!error){
+                  console.log('Tweeted succesfully ' + result)
+                }
+                else{
+                  console.log(error)
+                }
+              })
+            }
+            else{
+              console.log('Account not registered')
+            }
+          }
+          else {
+            console.log('Error getting account registration ' + error);
+          }
+        })
+      }
+</script>
+
+<body>
+  <div class="container">
+    <div class="row">
+        <div class="three columns">
+        	<label>Your Network:</label>
+        	<blockquote><p><span id="YourNetwork">Unknown</span><br /></p></blockquote>
+      	</div>
+        <div class="three columns">
+        	<label>Tweets in Network</label>
+        	<blockquote><p><span id="TotalTweetsinNetwork">0</span><br /></p></blockquote>
+      	</div>
+        <div class="three columns">
+        	<label>Logged in as:</label>
+        	<blockquote><p><span id="CurrentUser">You haven't logged in yet</span><br /></p></blockquote>
+      	</div>
+        <div class="three columns">
+        	<label>Your Tweets:</label>
+        	<blockquote><p><span id="CurrentUserTweets">0</span><br /></p></blockquote>
+      	</div>
+    </div>
+  </div>
+
+</body>
