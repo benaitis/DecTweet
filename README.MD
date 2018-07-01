@@ -7,7 +7,7 @@ This is our final project for [TheSchool.AI](https://www.theschool.ai), a decent
 You can acces the dapp on https://ipfs.io/ipfs/QmWXdCEwjBsRJYxkk8MMXafeeUvk5fswo6xSHugBRL978X or simply by forking the project and running command 'http-server' in src directory. Also you need metamask to interact with the dapp.
 
 ## Authors
-[Benaitis()](https://www.github.com/benaitis)
+[Benas](https://www.github.com/benaitis)
 
 ## Introduction
 
