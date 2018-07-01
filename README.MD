@@ -57,7 +57,7 @@ Currently you can see all tweets on the network, register your account and creat
 
 When a user visits our website at the moment (on version 0.0.1) he can see all the tweets on this network as you can see here.
 
-![Seeing the Tweets](https://imgur.com/2bbhy6d)
+![Seeing the Tweets](https://imgur.com/2bbhy6d.png)
 
 On the left the user tweet message is displayed. On the right the user's username is displayed. When another user somewhere across the planet creates a new tweet, your screen should update automatically too, that means you're seeing all the tweets live.
 
@@ -65,7 +65,7 @@ On the left the user tweet message is displayed. On the right the user's usernam
 
 Registering is available only when a user hasn't joined the network yet. If he has joined - he cannot change his username as of version 0.0.1.
 
-![Registering](https://imgur.com/2CZdp16)
+![Registering](https://imgur.com/2CZdp16.png)
 
 As you can see the registering part is simple and only works if the user hasn't signed in yet. A user has to write his username and press submit. Simple. If registering was succesfull he'll see an update.
 
@@ -73,7 +73,7 @@ As you can see the registering part is simple and only works if the user hasn't 
 
 Tweeting is available only when the user has joined the network. Other way he'll have to join. 
 
-![Tweeting](https://imgur.com/YESomic)
+![Tweeting](https://imgur.com/YESomic.png)
 
 Tweeting is fairly simple, the user has to put his message. There is no message length restriction, though, as the message's length increases its gas value increases also, so users should stick to short and medium sized messages/tweets.
 
@@ -86,7 +86,7 @@ Total tweet count on the DecTweet network.
 Users username.
 Total tweet count of the user.
 
-![Network update](https://imgur.com/7ZITgYT)
+![Network update](https://imgur.com/7ZITgYT.png)
 
 This is fairly simple. If the user doesn't have metamask or isn't signed in to his account, he will see a reminder on top of the page and the network value will be 'No network found'. 
 
