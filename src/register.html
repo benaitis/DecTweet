@@ -1,0 +1,293 @@
+<html>
+  <head>
+    <title>Register | Decentralised Twitter</title>
+    <div class="container">
+      <h1>Register your account and join the Decentralised Twitter</h1>
+    </div>
+    <div class="container">
+      <div class="row">
+        <div class="six columns">
+            <input id="Username" type="text" name="Username" placeholder="Your Username"><br>
+        </div>
+      </div>
+      <div class="row">
+        <div class="six columns">
+            <button class="button-primary" id="registerButton" type="submit" value="Submit" onClick="Register()">Submit</button>
+            <p id="validation" style="color:red"></p>
+            <p id='success' style='color:green'></p>
+            <button class="button" type="submit" value="Submit" onClick="window.location='index.html'">Back to Menu</button>
+        </div>
+      </div>
+    </div>
+    <script type="text/javascript" src="js/web3.js"></script>
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/skeleton.css">
+  </head>
+</html>
+<script>
+  //Web3 init
+  var web3Provider = null;
+  if (typeof web3 !== 'undefined') {//Web3 init
+    web3provider = web3.currentProvider;
+    console.log("Web3 version: " + web3.version.api)
+  } else {
+    // If no injected web3 instance is detected, fall back to Ganache
+    web3Provider = new Web3.providers.HttpProvider('http://localhost:8545');
+  }
+  web3.setProvider(web3provider);
+
+
+  //Contract init
+  var contractAddress = '0xb2C02eFe94919797D5a262803D5318DCA9A96A99';
+          var contractABI = [
+              	{
+              		"anonymous": false,
+              		"inputs": [
+              			{
+              				"indexed": true,
+              				"name": "authour",
+              				"type": "address"
+              			},
+              			{
+              				"indexed": false,
+              				"name": "message",
+              				"type": "string"
+              			},
+              			{
+              				"indexed": false,
+              				"name": "index",
+              				"type": "uint256"
+              			}
+              		],
+              		"name": "addTweet",
+              		"type": "event"
+              	},
+              	{
+              		"constant": false,
+              		"inputs": [
+              			{
+              				"name": "message",
+              				"type": "string"
+              			}
+              		],
+              		"name": "NewTweet",
+              		"outputs": [
+              			{
+              				"name": "index",
+              				"type": "uint256"
+              			}
+              		],
+              		"payable": false,
+              		"stateMutability": "nonpayable",
+              		"type": "function"
+              	},
+              	{
+              		"constant": false,
+              		"inputs": [
+              			{
+              				"name": "_username",
+              				"type": "string"
+              			}
+              		],
+              		"name": "register",
+              		"outputs": [
+              			{
+              				"name": "result",
+              				"type": "bool"
+              			}
+              		],
+              		"payable": false,
+              		"stateMutability": "nonpayable",
+              		"type": "function"
+              	},
+              	{
+              		"constant": true,
+              		"inputs": [],
+              		"name": "getAllTweetCount",
+              		"outputs": [
+              			{
+              				"name": "count",
+              				"type": "uint256"
+              			}
+              		],
+              		"payable": false,
+              		"stateMutability": "view",
+              		"type": "function"
+              	},
+              	{
+              		"constant": true,
+              		"inputs": [
+              			{
+              				"name": "id",
+              				"type": "uint256"
+              			}
+              		],
+              		"name": "getTweet",
+              		"outputs": [
+              			{
+              				"name": "text",
+              				"type": "string"
+              			},
+              			{
+              				"name": "user",
+              				"type": "address"
+              			}
+              		],
+              		"payable": false,
+              		"stateMutability": "view",
+              		"type": "function"
+              	},
+              	{
+              		"constant": true,
+              		"inputs": [
+              			{
+              				"name": "_address",
+              				"type": "address"
+              			}
+              		],
+              		"name": "getUsername",
+              		"outputs": [
+              			{
+              				"name": "",
+              				"type": "string"
+              			}
+              		],
+              		"payable": false,
+              		"stateMutability": "view",
+              		"type": "function"
+              	},
+              	{
+              		"constant": true,
+              		"inputs": [
+              			{
+              				"name": "_user",
+              				"type": "address"
+              			}
+              		],
+              		"name": "getUserTweetsCount",
+              		"outputs": [
+              			{
+              				"name": "count",
+              				"type": "uint256"
+              			}
+              		],
+              		"payable": false,
+              		"stateMutability": "view",
+              		"type": "function"
+              	},
+              	{
+              		"constant": true,
+              		"inputs": [
+              			{
+              				"name": "_address",
+              				"type": "address"
+              			}
+              		],
+              		"name": "isRegistered",
+              		"outputs": [
+              			{
+              				"name": "result",
+              				"type": "bool"
+              			}
+              		],
+              		"payable": false,
+              		"stateMutability": "view",
+              		"type": "function"
+              	},
+              	{
+              		"constant": true,
+              		"inputs": [
+              			{
+              				"name": "",
+              				"type": "uint256"
+              			}
+              		],
+              		"name": "tweets",
+              		"outputs": [
+              			{
+              				"name": "text",
+              				"type": "string"
+              			},
+              			{
+              				"name": "user",
+              				"type": "address"
+              			}
+              		],
+              		"payable": false,
+              		"stateMutability": "view",
+              		"type": "function"
+              	}
+              ];
+  var myContract = web3.eth.contract(contractABI).at(contractAddress);
+
+  async function Register()
+  {
+    if(document.getElementById('Username').value === ""){
+      document.getElementById('validation').innerHTML = 'Username cannot be an empty value';
+    }
+    else{
+      var username = document.getElementById('Username').value;
+      var activeAccount = await GetAccountAddress();
+      if(activeAccount != null){
+
+          var result = await isRegistered(activeAccount);
+          if(result){
+            console.log('Already Registered')
+          }
+          else{
+            console.log('Registering account: ', activeAccount);
+            //Register account
+            var result = await registerAccount(username, activeAccount);
+            console.log('Registered succesfully, transaction id: ' + result);
+            document.getElementById('success').innerHTML = 'Register Succesful';
+          }
+
+      }
+      else{
+        console.log('Not logged in to Metamask')
+      }
+    }
+  }
+
+  function registerAccount(username, account)
+  {
+    return new Promise (function (resolve, reject) {
+      myContract.register(username, {from: account}, function(error, result) {
+        if(!error){
+          resolve(result);
+        }
+        else{
+          reject(error);
+        }
+      })
+    })
+  }
+
+  function GetAccountAddress()
+  {
+      return new Promise (function (resolve, reject) {
+        web3.eth.getAccounts(function(error, result) {
+          if(!error){
+            resolve(result[0]);
+          }
+          else {
+            reject(error);
+          }
+        })
+      })
+  }
+
+  function isRegistered (_address) {
+    return new Promise (function (resolve, reject) {
+      myContract.isRegistered(_address, function(error, result){
+        if(!error){
+          resolve(result);
+        }
+        else {
+          reject(error);
+        }
+      });
+    })
+  }
+
+</script>
